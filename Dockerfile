@@ -1,35 +1,46 @@
-# Utiliser une image Node.js alpine pour un conteneur léger
-FROM node:20-alpine
+# Dockerfile optimisé pour la production
+FROM node:20-alpine AS builder
 
-# Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers de configuration des dépendances
+# Copier les fichiers de dépendances
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Installer les dépendances
-RUN npm install
+# Installer UNIQUEMENT les dépendances de production
+RUN npm ci --only=production && npm cache clean --force
 
 # Copier le code source
 COPY src/ ./src/
 
-# Construire l'application TypeScript
+# Construire l'application
 RUN npm run build
 
-# Exposer le port (optionnel pour MCP via stdio)
-EXPOSE 3000
+# Image de production
+FROM node:20-alpine AS production
 
-# Variables d'environnement par défaut
-ENV NODE_ENV=production
+WORKDIR /app
 
 # Créer un utilisateur non-root pour la sécurité
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S mcpuser -u 1001
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S mcpuser -u 1001
+
+# Copier les dépendances de production
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+
+# Variables d'environnement
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--enable-source-maps"
 
 # Changer la propriété des fichiers
 RUN chown -R mcpuser:nodejs /app
 USER mcpuser
 
-# Commande par défaut pour démarrer le serveur
+# Healthcheck léger
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "console.log('Health check OK')" || exit 1
+
+# Commande de démarrage
 CMD ["npm", "start"]

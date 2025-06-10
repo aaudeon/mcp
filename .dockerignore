@@ -1,22 +1,56 @@
-# Fichiers de build
-node_modules/
-dist/
-*.log
+# Fichiers et dossiers à ignorer lors de la construction Docker
 
-# Fichiers d'environnement
+# Dépendances
+node_modules/
+npm-debug.log*
+
+# Build artifacts  
+dist/
+
+# Tests et coverage
+coverage/
+*.lcov
+
+# Environment files
 .env
 .env.local
 .env.*.local
 
-# Fichiers système
-.DS_Store
-Thumbs.db
+# Logs
+logs/
+*.log
+
+# Cache et fichiers temporaires
+.npm
+.cache
+tmp/
+temp/
 
 # Fichiers de développement
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Documentation de développement
+README*.md
+CHANGELOG.md
+
+# Git
+.git/
+.gitignore
+
+# Configuration ESLint et Prettier
+.eslintrc.*
+.prettierrc.*
+
+# Scripts de développement
+deploy.sh
 
 # Fichiers de test
 coverage/
