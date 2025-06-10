@@ -2,6 +2,10 @@
 
 Un serveur MCP (Model Context Protocol) complet pour fournir des informations météorologiques en temps réel à vos assistants IA.
 
+<a href="https://glama.ai/mcp/servers/@aaudeon/mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@aaudeon/mcp/badge" alt="Weather Server MCP server" />
+</a>
+
 ## ✨ Fonctionnalités
 
 - **3 outils météo complets** :
