@@ -1,39 +1,75 @@
 services:
+  # Serveur MCP Weather
   mcp-weather-server:
     build: .
     container_name: mcp-weather-server
-    ports:
-      - "3001:3000"
     environment:
       - NODE_ENV=production
+      - PORT=3000
     env_file:
       - .env
     restart: unless-stopped
-    volumes:
-      # Volume pour la persistance des logs (optionnel)
-      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mcp-weather.rule=Host(`mcp-weather.top-exo.fr`)"
+      - "traefik.http.routers.mcp-weather.entrypoints=https"
+      - "traefik.http.routers.mcp-weather.tls.certresolver=myresolver"
+      - "traefik.http.services.mcp-weather.loadbalancer.server.port=3000"
+      - "traefik.docker.network=reverse-proxy"
     networks:
+      - reverse-proxy
       - mcp-network
 
-  # Service optionnel pour un reverse proxy (nginx)
-  nginx:
-    image: nginx:alpine
-    container_name: mcp-nginx
-    ports:
-      - "8080:80"
-      - "8443:443"
+  # n8n - Plateforme d'automatisation workflow
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://n8n.top-exo.fr/
+      - N8N_EDITOR_BASE_URL=https://n8n.top-exo.fr/
+      - GENERIC_TIMEZONE=Europe/Paris
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - N8N_TEMPLATES_ENABLED=true
+      - N8N_ONBOARDING_FLOW_DISABLED=true
+      - N8N_METRICS=false
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_BASIC_AUTH_ACTIVE=false
+      - N8N_LISTEN_ADDRESS=0.0.0.0
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/home/node/workflows
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.n8n.rule=Host(`n8n.top-exo.fr`)"
+      - "traefik.http.routers.n8n.entrypoints=https"
+      - "traefik.http.routers.n8n.tls.certresolver=myresolver"
+      - "traefik.http.services.n8n.loadbalancer.server.port=5678"
+      - "traefik.docker.network=reverse-proxy"
+    networks:
+      - reverse-proxy
+      - mcp-network
     depends_on:
       - mcp-weather-server
-    networks:
-      - mcp-network
-    restart: unless-stopped
 
 networks:
+  reverse-proxy:
+    name: reverse-proxy
+    external: true
   mcp-network:
     driver: bridge
 
 volumes:
-  logs:
+  n8n_data:
