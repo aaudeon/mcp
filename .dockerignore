@@ -1,0 +1,38 @@
+# Fichiers de build
+node_modules/
+dist/
+*.log
+
+# Fichiers d'environnement
+.env
+.env.local
+.env.*.local
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers de développement
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Fichiers de test
+coverage/
+.nyc_output/
+
+# Fichiers temporaires
+*.tmp
+*.temp
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Fichiers SSL (si utilisés)
+ssl/
+*.pem
+*.key
+*.crt
